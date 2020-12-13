@@ -406,7 +406,7 @@ void Scrobbler::setSong(const Song &s)
         currentSong=Track(s);
         lastNowPlaying=0;
         emit songChanged(!s.isStandardStream() && !s.isEmpty());
-        if (scrobbleViaMpd || !isEnabled() || s.isStandardStream() || s.time<30) {
+        if (scrobbleViaMpd || !isEnabled() || s.isStandardStream()) {
             return;
         }
 
@@ -441,7 +441,8 @@ void Scrobbler::scrobbleNowPlaying()
         params["trackNumber"] = QString::number(currentSong.track);
     }
     if (currentSong.length) {
-        params["duration"] = QString::number(currentSong.length);
+        quint32 duration = currentSong.length > 30 ? currentSong.length : 30;
+        params["duration"] = QString::number(duration);
     }
     params["sk"] = sessionKey;
     sign(params);
@@ -509,7 +510,9 @@ void Scrobbler::scrobbleQueued()
                 params[QString("trackNumber[%1]").arg(i)] = QString::number(s.track);
             }
             if (s.length) {
-                params[QString("duration[%1]").arg(i)] = QString::number(s.length);
+                quint32 duration = s.length > 30 ? s.length : 30;
+                printf("%d\n", duration);
+                params[QString("duration[%1]").arg(i)] = QString::number(duration);
             }
             params[QString("timestamp[%1]").arg(i)] = QString::number(s.timestamp);
             lastScrobbledSongs.append(s);
